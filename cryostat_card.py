@@ -81,6 +81,7 @@ def cmd_make(read, address, data):
 def test():
     readpv = 'test_epics:AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:read'
     writepv = 'test_epics:AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:write' 
+  
     c = cryostat_card(readpv, writepv)
     n = 0    
     error_count = 0;
