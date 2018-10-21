@@ -4,7 +4,7 @@ def bytes_to_32bit(array, start):
 
 
 
-fname = "/usr/local/controls/Data/smurf/testdata2_1539031453.dat"
+fname = "test.dat"
 f = open(fname, "rb")
 header_length = 128;
 header_wordsize = 1; # bytes
@@ -31,7 +31,10 @@ for n  in range(0, 1000000):
     syncword = bytes_to_32bit(header, 96);
     epics_nanoseconds = bytes_to_32bit(header, 72)
     epics_seconds = bytes_to_32bit(header, 76)
-    print("frame = ", n, "MCEsync = ", syncword , "epics s = ", epics_seconds, "ns=", epics_nanoseconds,  "data(0) = ", data[0])
+    #print("frame = ", n, "MCEsync = ", syncword , "epics s = ", epics_seconds, "ns=", epics_nanoseconds,  "data(0) = ", data[0])
+    if(not(n%1000)):
+       print(n)
+       
 
     
 
