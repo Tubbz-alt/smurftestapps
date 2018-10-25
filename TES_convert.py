@@ -13,10 +13,10 @@ def set_byte(dat, val, n):
     tmp = 0xff << (8 * n)
     tmp2 = 0xffffffff - tmp # inverted
     tmp3 = ((dat & tmp2) + (val << (8 * n)))
-    return ( 0xffffff & tmp3) # limit to 24 bit
+    return ( 0xffffffff & tmp3) # limit to 32 bit
 
 for j in range (0, 16): # should pull from PV
-    tesp[j] =j # testing only
+    tesp[j] =-j + 0x8FFFFF # testing only
     tesn[j] =0 # testing only
     
 n = 0   #output word number
@@ -27,20 +27,28 @@ outx = [0]*12  # 12 output words for 16 input words
 
     
 for j in range(0, 16):
-    sub[j] = ( 0xFFFFF  & (tesp[j] - tesn[j]))
+    sub[j] = ( 0xFFFFFF  & ((tesp[j] - tesn[j])))
   
     
 while 1:
     outx[n] = set_byte(outx[n], get_byte(sub[m], b), r) # everythign happens here
-    print('m = ', m, 'b = ', b, 'n = ', n, 'r = ', r, 'byte = ', get_byte(sub[m], b))
+    print('m = ', m, 'b = ', b, 'n = ', n, 'r = ', r, 'byte = ', get_byte(sub[m], b),'in = ', hex(sub[m]),'out = ',  hex(outx[n]))
     b = b + 1
     r = r + 1
-    if b == 6:
+    if b == 3:
         b = 0
         m = m + 1
-    if r == 8:
+    if r == 4:
         r = 0
         n = n + 1
     if (m == 16) or (n== 12):   #done
         break
 
+fname = 'test.dat'
+
+f = open(fname, 'w')
+for j in range(0,12):
+    f.write(str(outx[j]))
+    f.write('\n')
+    print(j, hex(outx[j]))
+   
