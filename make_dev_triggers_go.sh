@@ -5,4 +5,7 @@ caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTrigg
 caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:RateSel 5
 caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2TriggerReg[0]:Enable 1
 caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2TriggerReg[0]:Width 10
+caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:TimingFrameRx:ClkSel 1
+caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:TimingFrameRx:ClkSel 0
+caput dev_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:TimingFrameRx:ClkSel 1
 

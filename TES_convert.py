@@ -1,4 +1,5 @@
-# takes 32 X 20 bit TES data, converts to packed 12X64 bit.
+# takes 16 X 24 bit TES data, converts to packed 12x32 bit.
+import epics
 
 tesp = [0]*16
 tesn = [0]*16
@@ -15,40 +16,41 @@ def set_byte(dat, val, n):
     tmp3 = ((dat & tmp2) + (val << (8 * n)))
     return ( 0xffffffff & tmp3) # limit to 32 bit
 
-for j in range (0, 16): # should pull from PV
-    tesp[j] =-j + 0x8FFFFF # testing only
-    tesn[j] =0 # testing only
-    
-n = 0   #output word number
-m = 0 # input word number
-b = 0  # byte in intput word
-r = 0 # byte in output word
-outx = [0]*12  # 12 output words for 16 input words
 
-    
-for j in range(0, 16):
-    sub[j] = ( 0xFFFFFF  & ((tesp[j] - tesn[j])))
-  
-    
-while 1:
-    outx[n] = set_byte(outx[n], get_byte(sub[m], b), r) # everythign happens here
-    print('m = ', m, 'b = ', b, 'n = ', n, 'r = ', r, 'byte = ', get_byte(sub[m], b),'in = ', hex(sub[m]),'out = ',  hex(outx[n]))
-    b = b + 1
-    r = r + 1
-    if b == 3:
-        b = 0
-        m = m + 1
-    if r == 4:
-        r = 0
-        n = n + 1
-    if (m == 16) or (n== 12):   #done
-        break
+input_pv_block = ':AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:RtmSpiMax:TesBiasDacDataRegCh' # pvs to output for timing stream
+out_pv_block = ':AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:rtmDacConfig' # pvs to output for timing stream
 
-fname = 'test.dat'
+def TES_to_header(epics_base = 'test_epics'):
 
-f = open(fname, 'w')
-for j in range(0,12):
-    f.write(str(outx[j]))
-    f.write('\n')
-    print(j, hex(outx[j]))
-   
+    for j in range (0, 16): # get from PVs
+        tesp[j] = epics.caget(epics_base + input_pv_block + '['+ str(2*j+2) + ']')  # positive dac
+        tesn[j] =  epics.caget(epics_base + input_pv_block + '['+ str(2*j+1) + ']')  # negative dac
+    n = 0   #output word number
+    m = 0 # input word number
+    b = 0  # byte in intput word
+    r = 0 # byte in output word
+    outx = [0]*12  # 12 output words for 16 input words
+
+    for j in range(0, 16):
+        sub[j] = ( 0xFFFFFF  & ((tesp[j] - tesn[j])))
+
+    while 1:
+        outx[n] = set_byte(outx[n], get_byte(sub[m], b), r) # everythign happens here
+        print('m = ', m, 'b = ', b, 'n = ', n, 'r = ', r, 'byte = ', get_byte(sub[m], b),'in = ', hex(sub[m]),'out = ',  hex(outx[n]))
+        b = b + 1
+        r = r + 1
+        if b == 3:
+            b = 0
+            m = m + 1
+        if r == 4:
+            r = 0
+            n = n + 1
+        if (m == 16) or (n== 12):   #done
+            break
+
+        for n in range(0, 12):
+            epics.caput(epics_base + output_pv_block + '[' + str(n) + ']', outx[n+1])  # write pvs to timing stream
+
+
+
+                            
