@@ -1,15 +1,22 @@
 # example file read for data
 import numpy
 import matplotlib.pyplot as plt
+import sys
 
-dat = numpy.loadtxt('/data/smurf_stream/testout.txt');
+if len(sys.argv) < 2:
+    fn = '/data/smurf_stream/testout.txt'
+else:
+    fn = sys.argv[1]
+dat = numpy.loadtxt(fn)
 
+print(dat.shape)
 
 tm = dat[:,0]
-data1 = dat[:,1]
-data2 = dat[:,2]
-
-plt.plot(tm, data1, 'r-')
+for i in range(40,50):
+    plt.figure()
+    plt.plot(tm, dat[:,i], 'r-')
+    plt.title('%i' % (i))
+    plt.show()
 
 plt.show()
 
