@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
   uint32_t lower_time_counter; 
   uint32_t upper_time_counter;
   uint32_t initial_upper_time; 
+  uint32_t initial_lower_time;
   uint ctr; 
   uint tmp;
   uint avgcnt; // counter for average cycle
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
   
   num_channels = *((uint32_t*)(buffer + header_channel_offset)); // sets read block size
   initial_upper_time  = *((uint32_t*)(buffer + time_upper_offset)); // 64 bit counter 
-
+  initial_lower_time = *((uint32_t*) (buffer + time_lower_offset));
 
   //num_channels = 528; // TEST TEST TEST - REMOVE FOR PRODUCTION, UGLY KLUDGE 
 
@@ -121,11 +122,12 @@ int main(int argc, char *argv[])
 	    {
 	      upper_time_counter = *((uint32_t*)(buffer + time_upper_offset + read_size * j)); // 32 bit counter
 	      lower_time_counter =  *((uint32_t*)(buffer + time_lower_offset + read_size * j)); 
-	      dtl = (double) lower_time_counter; 
-	      dtu = (double) (upper_time_counter - initial_upper_time);  // now a double
+	      dtl = (double) (lower_time_counter);
+	      dtu = (double) (upper_time_counter) -(double) (initial_upper_time);  // now a double
 	      framecounter = *((uint32_t*)(buffer + frame_counter_offset + read_size * j)); 
 	      mcecounter =  *((uint32_t*)(buffer + mce_counter_offset + read_size * j)); 
 	      fprintf(fpout, "%12.6f ", dtu + dtl/1e9);
+	      //fprintf(fpout, "%12d %12d %12.6f %12.6f %12.6f", upper_time_counter, lower_time_counter, dtu, dtl, dtu + dtl / 1e9);
 	      if(diagmode == 1)
 		{
 		  fprintf(fpout, "%10d %10d ", framecounter, mcecounter);

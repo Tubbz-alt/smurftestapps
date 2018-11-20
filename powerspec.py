@@ -5,7 +5,7 @@ import sys
 from scipy import signal
 
 if len(sys.argv) < 2:
-    fn = '/data/smurf_stream/testout.txt'
+    fn = '/data/smurf_stream/data.txt'
 else:
     fn = sys.argv[1]
 dat = numpy.loadtxt(fn)
