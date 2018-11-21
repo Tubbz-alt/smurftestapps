@@ -126,8 +126,8 @@ int main(int argc, char *argv[])
 	      dtu = (double) (upper_time_counter) -(double) (initial_upper_time);  // now a double
 	      framecounter = *((uint32_t*)(buffer + frame_counter_offset + read_size * j)); 
 	      mcecounter =  *((uint32_t*)(buffer + mce_counter_offset + read_size * j)); 
-	      fprintf(fpout, "%12.6f ", dtu + dtl/1e9);
-	      //fprintf(fpout, "%12d %12d %12.6f %12.6f %12.6f", upper_time_counter, lower_time_counter, dtu, dtl, dtu + dtl / 1e9);
+	      fprintf(fpout, "%12.6f ", dtu + dtl/1e9); // REAL
+	      //fprintf(fpout, "%12x %12x", upper_time_counter, lower_time_counter); // TEST
 	      if(diagmode == 1)
 		{
 		  fprintf(fpout, "%10d %10d ", framecounter, mcecounter);
