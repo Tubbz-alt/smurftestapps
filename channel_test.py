@@ -82,9 +82,9 @@ def write_smurf():
 def start_collect():  # starts data collection
     set_bit(user_config, 0x6, 0x6) # clear and disable file write
     time.sleep(0.1) # to make sure write goes through
-    os.system('alias rm=rm');
-    os.system('rm /tmp/data.*')
-    time.sleep(0.1)
+    #os.system('alias rm=rm');
+    #os.system('rm /tmp/data.*')
+    #time.sleep(0.1)
     set_bit(user_config, 0x6, 0x0) # clear bits to start writing
     
     
