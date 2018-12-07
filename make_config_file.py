@@ -6,17 +6,20 @@
 #ip or port changes require a smurf restart
 import sys
 
-docstring = """ Program to genreate config files for the smurf mcetransmit program.  Use
-make_config_file <dev / prod> frame_rate  filter_f order
-exmple:
-python3 make_config_file dev
+docstring = """Program to genreate config files for the smurf mcetransmit program.  
+Use:    python3 make_config_file <dev / prod> frame_rate  filter_lowpass_frequency filter_order receiver_ip_address output file nam3e
+example:
+python3 make_config_file.py  dev
 writes a file called development.cfg which will create data files names /tmp/data.txt   Overwriting for each new file.  This is useful if you want to take, then analyze data.
 defaults to 4000Hz frame rate, 63Hz low pass, 4th order 
 
-python3 make_conf_file prod 6000 50  3
+python3 make_config_file.py prod 6000 60 4 192.168.3.34 /usr/local/controls/Applications/smurf/smurf2mce/master/mcetransmit/smurf2mce.cfg
+
 Writes a file called production.cfg which will create data files in /data/smurf_stream/data_XXXXX.dat  where XXXX is the unix time stamp when th file was created
-This assmes a 6KHz frame rate, 50Hz low pass, 3rd order butterworth filter
-""" 
+This assmes a 6KHz frame rate, 60Hz low pass, 3rd order butterworth filter
+Ip 192.168.3.34 is the targed MCE computer
+File will be written dirctly to the production location
+"""
 
 
 if len(sys.argv) < 2:
@@ -26,7 +29,7 @@ else:
         print(docstring)
         exit()
     if (sys.argv[1].find('prod') != -1):
-        mode = 1  # productin
+        mode = 1  # production
     else: 
         mode = 0  # development
 
@@ -34,6 +37,7 @@ else:
 filter_order = 4;  # this is for a 4th order filter
 smurf_frame_rate = 4000;  # set by timing sysetms
 filter_frequency = 63;  # chosen filter low pass frequency.
+receiver_ip = "192.168.3.134"
 
 if len(sys.argv) > 2:
     smurf_frame_rate = float(sys.argv[2])
@@ -41,24 +45,28 @@ if len(sys.argv) > 3:
     filter_frequency = float(sys.argv[3])
 if len(sys.argv) > 4:
     filter_order = int(sys.argv[4])
+if len(sys.argv) > 5:
+    receiver_ip = sys.argv[5]
 
+if mode == 0:
+    cfg_file_name = 'development.cfg'
+if mode == 1:
+    cfg_file_name = 'production.cfg'
+if len(sys.argv) > 6:
+    cfg_file_name = sys.argv[6]
+    
       
     
 
 
 
 #can change name to generate other files, then copy to smurf2mce.cfg
-if mode == 0:
-    cfg_file_name = 'development.cfg'
-if mode == 1:
-    cfg_file_name = 'production.cfg'
-
 
 
 
 #Receiver IP is the IP address where MCE data will be sent.  N
 #Note that the address is a string (!!!!), not numbers
-receiver_ip = "192.168.3.79"
+
 
 #port number is the port to use to communicate with MCE. It has to be the same
 #as the port in ../mcereceiver/src/smurfrec.cfg
@@ -80,7 +88,7 @@ if (mode == 0):
     file_name_extend = 0 
     data_file_name = "/tmp/data"
 
-data_frames = 1000000;  # up to 1000000 works. 
+data_frames = 2000000;  # up to 1000000 works. 
 
 
 
@@ -100,6 +108,9 @@ print('filter frequency = ', filter_frequency, "Hz", filter_order, "order butter
 
 
 from scipy import signal
+print(filter_order)
+print(filter_frequency)
+print(smurf_frame_rate)
 b,a = signal.butter(filter_order, 2*filter_frequency / smurf_frame_rate)
 
 with open(cfg_file_name, "w") as f:

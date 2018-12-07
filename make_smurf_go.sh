@@ -7,4 +7,5 @@ caput test_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTrig
 caput test_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:RateSel 6
 caput test_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2TriggerReg[0]:Enable 1
 caput test_epics:AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2TriggerReg[0]:Width 10
+caput  test_epics:AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:userConfig[0] 0
 

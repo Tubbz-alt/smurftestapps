@@ -11,8 +11,8 @@ from scipy import signal
 
 pwelch_ratio = 8;  # to set size of nperseg
 
-#epics_base = 'test_epics:'
-epics_base = 'dev_epics:'
+epics_base = 'test_epics:'
+#epics_base = 'dev_epics:'
 
 base_name =  epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:StreamReg:StreamData"
 user_config = epics_base +"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:userConfig[0]"
@@ -21,6 +21,7 @@ infname = "/tmp/data.dat"
 outfname = "/tmp/data.txt"
 
 def set_bit(pv, mask, val):  # sets a bit without changeing others
+    print("pv = ", pv)
     old = epics.caget(pv)  # old value
     tmp = old & (0xffffffff - mask) # everything but hte mask value
     new = tmp + (val & mask)
