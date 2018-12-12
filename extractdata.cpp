@@ -21,6 +21,8 @@ const uint mce_counter_offset = 96;
 const uint frame_counter_offset = 84; 
 const uint data_size = 4; // data size bytes
 const uint max_channels = 4096; // will really use 528
+const uint unix_time_offset = 48; // 64 bit number
+
 
 int main(int argc, char *argv[])
 {
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
   uint diagmode; 
   uint32_t mcecounter; 
   uint32_t framecounter; 
+  uint64_t unix_time; 
 
   buffer =(uint8_t*) malloc(buffsize * sizeof(uint8_t)); 
   strcpy(infilename, "data.dat");
@@ -120,6 +123,7 @@ int main(int argc, char *argv[])
 	  avgcnt++;  // increment average count
 	  if (avgcnt == averages) // done averaging, time to write
 	    {
+	      unix_time =          *((uint64_t*)(buffer + unix_time_offset + read_size * j)); 
 	      upper_time_counter = *((uint32_t*)(buffer + time_upper_offset + read_size * j)); // 32 bit counter
 	      lower_time_counter =  *((uint32_t*)(buffer + time_lower_offset + read_size * j)); 
 	      dtl = (double) (lower_time_counter);
@@ -130,7 +134,7 @@ int main(int argc, char *argv[])
 	      //fprintf(fpout, "%12x %12x", upper_time_counter, lower_time_counter); // TEST
 	      if(diagmode == 1)
 		{
-		  fprintf(fpout, "%10d %10d ", framecounter, mcecounter);
+		  fprintf(fpout, "%10d %10d  %lu", framecounter, mcecounter, unix_time);
 		}
 	      for(uint n = first_channel; n <= last_channel; n++)
 		{	
