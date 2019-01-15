@@ -1,2 +1,3 @@
 cd /usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit
-nohup ./smurf_nogui.sh > /dev/null &
+#nohup ./smurf_nogui.sh > /dev/null &
+./smurf_nogui.sh
