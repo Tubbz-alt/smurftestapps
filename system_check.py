@@ -23,7 +23,7 @@ rf_runs = 7 # number of test runs between frequencies
 rf_min_ratio = 20  # minimum OK ration between desired line and other lines 
 
 tmpfile = "/tmp/checkertmp"
-config_file= "/usr/local/controls/Applications/smurf/smurf2mce/master/mcetransmit/smurf2mce.cfg"
+config_file= "/usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit/smurf2mce.cfg"
 pidfile = "/tmp/smurfpid"
 rf_test_on = False  # assume no rf testing 
 if len(sys.argv) >1:
@@ -88,11 +88,16 @@ def cmdrun(a = 'ls'):
         cmdout = f.read()
     return(cmdout)
 
+os.system("service sioc-smrf-ml00 restart")
+
+
 print("Note: Power cycle smurf card to put in known state, wait 70 seconds")
 os.system("fru_deactivate 10.0.1.30/2")
 time.sleep(5)
 os.system("fru_activate 10.0.1.30/2")
 time.sleep(45)
+
+
 
 
 
@@ -115,14 +120,14 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
     b = a.find("ts01")
     if (b < 0):
         print("ERROR: ts01 timign service not running, restarting")
-        os.system("sudo service sioc-smrf-ts01 restart")
+        os.system("service sioc-smrf-ts01 restart")
         continue
     else:
         print("OK: ts01 timing service is running")
     b = a.find("ml00")
     if (b < 0):
         print("ml00 epics service not running")
-        os.system("sudo service sioc-smrf-ml00 restart")
+        os.system("service sioc-smrf-ml00 restart")
         continue
     else:
         print("OK: ml00 service is running")
@@ -153,7 +158,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             if (b >= 0):
                 c = x.split() # split into substrings
                 ip = c[1]  # the ip address
-                print("OK: receiver IP address in smurf2mce.cfg = ", ip)
+                print("Note: receiver IP address in smurf2mce.cfg = ", ip)
                 print("Note: check that IP address can be reached")
                 a = cmdrun("ping -c1 " + ip)
                 r = a.find("rtt") #only get this when ping returns
@@ -187,29 +192,44 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             smurf_proble = True
 
 
+        XX = 0
+        if XX:     # This section disabled until epics is fixed.
         # check valid counts increment
-        c1 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
-        time.sleep(1)
-        c2 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
-        d = c2-c1
-        if (d <= 0):
-            print("ERROR:  RSSI link is not updating delta = ",d);
-            smurf_problem = True
+            c1 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
+            time.sleep(1)
+            c2 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
+            d = c2-c1
+            if (d <= 0):
+                print("ERROR:  RSSI link is not updating delta = ",d);
+                smurf_problem = True
+            else:
+                print("OK: RSSI link updating, delta =", d)
         else:
-            print("OK: RSSI link updating, delta =", d)
+            print("NOTE: skipping PCIE test becuase EPICS is broken.  Need to modify this script to enable again") 
+
+
 
         # enabele register polling
         print("enabling register polling")
         epics.caput(global_enable_pv, True)  # we normally leave this off to reduce dropped frames
 
-
+        print("ready to set defaults")
         epics.caput(set_defaults_pv, 1)
+        print("set defaults done")
         time.sleep(5)
-      
+        print("sleep done");
         #check timing setup
-        a = epics.caget(rate_def_pv)
+        XX = 0
+        if XX:  # disabled while epics is broken. 
+            a = epics.caget(rate_def_pv)
+        else:
+            print("NOTE: skipping PCIE test becuase EPICS is broken.  Need to modify this script to enable again") 
+            a = [32,40,48,60,80,96,120,240,480]
         b = epics.caget(rate_select_pv) # which rate are we using
+        print("b = ", b)
+        print("a[b] = ", a[b])
         rate = 480000.0 / a[b]
+        print("rate - ", rate);
         if (b == 0):
             print("Note: Rate not initialized - rate 0 -> 48KHz, setting rate to 4KHz")
             epics.caput(rate_select_pv, 0x6) # select rate
@@ -228,7 +248,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         time.sleep(0.1)
         a2 = epics.caget(timestamp0_pv)
         if ((a1-a2) == 0):
-            print("Error: timing system fast counter not incrementing - probably smurf problem")
+            print("Error: timing system fast counter not incrementing. Check timing fiber, but also possibly a SMURF problem")
             smurf_problem = True
         else:
             print("OK: Timing system counter incrementing")
@@ -273,7 +293,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
                 print("OK:  cryostat card temperature = ", t)
             else:
                 print("ERROR: cryostat card commmunication error, temperature = ", t)
-                input("Check cryostat card cables, enter 0 to continue");
+                input("Fix cryostat card cables, enter 0 to continue, inlucing recheck of cryostat card");
                 smurf_problem = True
                 continue
         except: 
@@ -294,7 +314,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
                         smurf_problem = True
 
     if smurf_problem:  # OK go through full restart procedure
-        print("HOUSTON WE HAVE A PROBLEM - trying to fix")
+        print("ERROR: system failed a test above, will reboot / retry")
         #kill smurf
         print("pidfile = ", pidfile)
         try:
@@ -304,7 +324,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             os.system("kill "+a) # killing process
             time.sleep(1) # wait for it to die
         except:
-            print('no pidfile')
+            print('Note: no pidfile, this is not an error')
 
             # reboot the smurf card
         print("rebooting smurf card")
@@ -320,13 +340,8 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         if (rf_test_on==False):
            print("OK, system OK, no RF testing done, exiting")
            exit()
-        print("Starting RF test")
-   #     try:
+        print("Starting RF test")           
         [freq, diff, ratio] = rf_test.rf_test(rf_fmin, rf_fmax, rf_runs) #run rf testing
-    #    except: 
-    #        print("ERROR: RF test threw exception - trying restart")
-    #        smurf_problem = True
-    #        continue
         rmin = min(ratio)
         if rmin > rf_min_ratio:
             print("OK: RF OK (basic functinoal test only)")
@@ -343,6 +358,6 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             print("RF not operaging properly, line ratio too small, trying retest")
             smurf_problem = True
 print("ERROR: problem not resolved")
-print("Reboot smurf server (smurf-srv03) and try again, soometimes this fixes things")
+print("Reboot smurf server (smurf-server) and try again, soometimes this fixes things")
         
         
