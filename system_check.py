@@ -158,6 +158,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             if (b >= 0):
                 c = x.split() # split into substrings
                 ip = c[1]  # the ip address
+                ip = ip.split('/')[-1].split(':')[0]
                 print("Note: receiver IP address in smurf2mce.cfg = ", ip)
                 print("Note: check that IP address can be reached")
                 a = cmdrun("ping -c1 " + ip)
