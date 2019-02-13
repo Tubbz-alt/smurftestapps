@@ -13,7 +13,7 @@ python3 make_config_file.py  dev
 writes a file called development.cfg which will create data files names /tmp/data.txt   Overwriting for each new file.  This is useful if you want to take, then analyze data.
 defaults to 4000Hz frame rate, 63Hz low pass, 4th order 
 
-python3 make_config_file.py prod 6000 60 4 192.168.3.34 /usr/local/controls/Applications/smurf/smurf2mce/master/mcetransmit/smurf2mce.cfg
+python3 make_config_file.py prod 6000 60 4 192.168.3.34 /usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit/smurf2mce.cfg
 
 Writes a file called production.cfg which will create data files in /data/smurf_stream/data_XXXXX.dat  where XXXX is the unix time stamp when th file was created
 This assmes a 6KHz frame rate, 60Hz low pass, 3rd order butterworth filter
@@ -37,7 +37,7 @@ else:
 filter_order = 4;  # this is for a 4th order filter
 smurf_frame_rate = 4000;  # set by timing sysetms
 filter_frequency = 63;  # chosen filter low pass frequency.
-receiver_ip = "192.168.3.134"
+receiver_ip = "tcp://192.168.3.134:5333"
 
 if len(sys.argv) > 2:
     smurf_frame_rate = float(sys.argv[2])

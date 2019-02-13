@@ -23,7 +23,7 @@ rf_runs = 7 # number of test runs between frequencies
 rf_min_ratio = 20  # minimum OK ration between desired line and other lines 
 
 tmpfile = "/tmp/checkertmp"
-config_file= "/usr/local/controls/Applications/smurf/smurf2mce/master/mcetransmit/smurf2mce.cfg"
+config_file= "/usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit/smurf2mce.cfg"
 pidfile = "/tmp/smurfpid"
 rf_test_on = False  # assume no rf testing 
 if len(sys.argv) >1:
@@ -120,14 +120,14 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
     b = a.find("ts01")
     if (b < 0):
         print("ERROR: ts01 timign service not running, restarting")
-        os.system("sudo service sioc-smrf-ts01 restart")
+        os.system("service sioc-smrf-ts01 restart")
         continue
     else:
         print("OK: ts01 timing service is running")
     b = a.find("ml00")
     if (b < 0):
         print("ml00 epics service not running")
-        os.system("sudo service sioc-smrf-ml00 restart")
+        os.system("service sioc-smrf-ml00 restart")
         continue
     else:
         print("OK: ml00 service is running")
@@ -158,6 +158,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             if (b >= 0):
                 c = x.split() # split into substrings
                 ip = c[1]  # the ip address
+                ip = ip.split('/')[-1].split(':')[0]
                 print("Note: receiver IP address in smurf2mce.cfg = ", ip)
                 print("Note: check that IP address can be reached")
                 a = cmdrun("ping -c1 " + ip)
