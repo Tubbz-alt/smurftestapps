@@ -16,8 +16,8 @@ epics_base = 'test_epics:'
 
 base_name =  epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:StreamReg:StreamData"
 user_config = epics_base +"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:userConfig[0]"
- 
-infname = "/tmp/data.dat"
+
+infname = "/tmp/data.dat" 
 outfname = "/tmp/data.txt"
 
 def set_bit(pv, mask, val):  # sets a bit without changeing others
@@ -128,14 +128,10 @@ def plot_data(firstch=0, lastch=0, flt=1):
     print("nperseg = ", np)
     print("tstep = ", tstep)
     fx, pden = signal.welch(dat[:,1], 1.0/tstep, nperseg = np)
-   
 
-    for j in range(firstch, lastch+1):
+    for j in range(0, lastch+1-firstch):
         print("plotting", j)
         plt.plot(tm, dat[:,j+1])
-
-
-
 
     plt.show()
   
