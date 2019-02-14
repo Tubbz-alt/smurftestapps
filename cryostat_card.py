@@ -93,7 +93,7 @@ def test():
        else: 
           relay_set = 0xF;
         #  print 'RESET'
-       c.write_relays(relay_set)
+       #c.write_relays(relay_set)  # disable relay write
        time.sleep(0.2)
        relay  = c.read_relays()
        hemt_bias = c.read_hemt_bias()
