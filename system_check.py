@@ -2,30 +2,71 @@
 
 # checker program
 
-
 import sys
 import os
 import epics
 import time
 import pysmurf
 import cryostat_card
-import rf_test
+#import rf_test
 
-docstring = """ TEST"""
+docstring = """TEST"""
 
-epics_base = 'test_epics:'
-testapps_dir = '/usr/local/controls/Applications/smurf/smurftestapps/'
+## parameters
 
-#parameters for RF testing
+# Crate
+crate_ip='10.0.1.4'
+smurf_slot_id=5
+wait_after_deactivate=5 #sec
+wait_after_activate=60 #sec
+
+# Parameters for RF testing
 rf_fmin = 5010 # minimum test frequency 
 rf_fmax = 5990 # maximum test frequency
 rf_runs = 7 # number of test runs between frequencies
 rf_min_ratio = 20  # minimum OK ration between desired line and other lines 
 
+# EPICs
+epics_base = 'test_epics:'
+
+# Paths
+testapps_dir = '/usr/local/controls/Applications/smurf/smurftestapps/'
 tmpfile = "/tmp/checkertmp"
-config_file= "/usr/local/controls/Applications/smurf/smurf2mce/master/mcetransmit/smurf2mce.cfg"
 pidfile = "/tmp/smurfpid"
+
+# Files
+transmit_dir="/usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit/"
+config_file= os.path.join(transmit_dir,"smurf2mce.cfg")
+
+# Flags
 rf_test_on = False  # assume no rf testing 
+receiver_present = False # is there a receiver?  if yes, pulls ip from receiver_ip in smurf2mce.cfg
+pyrogue_gui = True # pyrogue gui?
+
+# PCIe
+pcie_pv_base = "SIOC:SMRF:ML00:AO" #A "Oh", not A "zero"
+pcie_pv_offset = 100 # offset all pvs by this much
+rssi_chan = smurf_slot_id-2   # for card #2
+
+# Timing
+timestamp0_pv = epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:timestamp[0]"
+mceData_pv = epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:mceData"
+
+rate_select_pv = epics_base+"AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:RateSel"
+rate_def_pv = "TPG:SMRF:1:FIXEDDIV"
+
+timing_dest_select_pv = epics_base+"AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:DestSel"
+
+# AMC
+set_defaults_pv = epics_base+"AMCc:setDefaults"
+global_enable_pv = epics_base+"AMCc:enable"
+
+# Cryostat card
+cryostat_card_readpv =  epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:read"
+cryostat_card_writepv = epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:write" 
+
+## end parameters
+
 if len(sys.argv) >1:
     if (sys.argv[1].find('rftest') != -1):
         rf_test_on = True
@@ -34,26 +75,6 @@ if rf_test_on:
     print("Will do RF testing - be sure loopback is connected, and cryostat disconnecdted.  WARNING ctrl-C if not connected!!")
 else:
     print("No RF testing")
-
-
-pcie_pv_base = "SIOC:SMRF:ML00:AO" #A "Oh", not A "zero"
-pcie_pv_offset = 100 # offset all pvs by this much
-rssi_chan = 0   # for card #2
-
-timestamp0_pv = epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:timestamp[0]"
-mceData_pv = epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:TimingHeader:mceData"
-
-rate_select_pv = epics_base+"AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:RateSel"
-rate_def_pv = "TPG:SMRF:1:FIXEDDIV"
-
-set_defaults_pv = epics_base+"AMCc:setDefaults"
-
-cryostat_card_readpv =  epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:read"
-cryostat_card_writepv = epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:SpiCryo:write" 
-
-timing_dest_select_pv = epics_base+"AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:DestSel"
-
-global_enable_pv = epics_base+"AMCc:enable"
 
 # pvs used in setup
 mispv = []
@@ -77,8 +98,6 @@ dac_base_pv = epics_base + "AMCc:FpgaTopLevel:AppTop:AppCore:MicrowaveMuxCore[0]
 dac_nums = [95]
 dac_vals = [0x123]
 
-
-
 num_misc_pvs = len(mispv)
 
 def cmdrun(a = 'ls'):
@@ -90,16 +109,15 @@ def cmdrun(a = 'ls'):
 
 os.system("sudo service sioc-smrf-ml00 restart")
 
-
-print("Note: Power cycle smurf card to put in known state, wait 70 seconds")
-os.system("fru_deactivate 10.0.1.30/2")
-time.sleep(5)
-os.system("fru_activate 10.0.1.30/2")
-time.sleep(45)
-
-
-
-
+print("Note: Power cycle smurf card to put in known state, wait %d seconds"%(wait_after_deactivate+wait_after_activate))
+os.system("fru_deactivate %s/%d"%(crate_ip,smurf_slot_id))
+print("wait %d seconds"%(wait_after_deactivate))
+time.sleep(wait_after_deactivate)
+print("reactivating card")
+os.system("fru_activate %s/%d"%(crate_ip,smurf_slot_id))
+print("wait %d seconds for firmware load"%(wait_after_activate))
+time.sleep(wait_after_activate)
+print("done power cycling smurf, ready to HAMMER")
 
 for trial in range(0,4):  # make 4 attempts to get smurf working
     print("Note: trial number = ", trial)
@@ -110,7 +128,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
     a = cmdrun("/sbin/lspci")
     b = a.find("SLAC")
     if (b < 0):
-        print("ERROR: PCIE card not running, Restart compter as shown below")
+        print("ERROR: PCIE card not running, Restart computer as shown below")
         print("INSTRUCTION: become root then shutdown now -r")
         exit()
     print("OK: PCIE card running")
@@ -147,33 +165,35 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         print("ERROR - FATAL unable to start pcie checker - giving up")
         exit()
 
-    #check connection to MCE computer.
-    with open(config_file, "r") as f:
-        for line in f:
-            x= line
-            if len(x) == 0:
-                print("Warning: couldn't find IP address in config file")
-                break
-            b = x.find("receiver_ip")
-            if (b >= 0):
-                c = x.split() # split into substrings
-                ip = c[1]  # the ip address
-                print("Note: receiver IP address in smurf2mce.cfg = ", ip)
-                print("Note: check that IP address can be reached")
-                a = cmdrun("ping -c1 " + ip)
-                r = a.find("rtt") #only get this when ping returns
-                if (r < 0):
-                    print("ERROR: could not ping MCE computer, check connection")
-                    print("fix networking, then restart this program")
-                    exit()
-                else:
-                    print("OK, able to ping MCE computer")
-                break
+    # If 
+    if receiver_present:
+        #check connection to MCE computer.
+        with open(config_file, "r") as f:
+            for line in f:
+                x= line
+                if len(x) == 0:
+                    print("Warning: couldn't find IP address in config file")
+                    break
+                b = x.find("receiver_ip")
+                if (b >= 0):
+                    c = x.split() # split into substrings
+                    ip = c[1]  # the ip address
+                    print("Note: receiver IP address in smurf2mce.cfg = ", ip)
+                    print("Note: check that IP address can be reached")
+                    a = cmdrun("ping -c1 " + ip)
+                    r = a.find("rtt") #only get this when ping returns
+                    if (r < 0):
+                        print("ERROR: could not ping MCE computer, check connection")
+                        print("fix networking, then restart this program")
+                        exit()
+                    else:
+                        print("OK, able to ping MCE computer")
+                    break
 
     try:
         #Run Smurf,  new copy will stop on old
-        print("starting smurf in nogui mode, - may kill running copy, wait 90 seconds to start")
-        os.system(testapps_dir+"run_smurf.sh")
+        print("starting smurf in %sgui mode, - may kill running copy, wait 90 seconds to start"%(['' if pyrogue_gui else 'no'][0]))
+        os.system(testapps_dir+"run_smurf.sh -t %s %s"%(transmit_dir,['' if pyrogue_gui else '--nogui'][0]))
         time.sleep(45)
         for j in range(0,3):
             ps_return = cmdrun("ps aux")
@@ -183,14 +203,13 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
                 os.system(testapps_dir+"run_smurf.sh")
                 print("waiting 45 seconds for smurf to start")
                 time.sleep(45)
-                print("done waiting fo smurf to start")
+                print("done waiting of smurf to start")
             else:
                 print("OK: SMURF is running")
                 break  
         if j >= 2:
             print("unable to start smurf")
-            smurf_proble = True
-
+            smurf_problem = True
 
         XX = 0
         if XX:     # This section disabled until epics is fixed.
@@ -207,9 +226,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         else:
             print("NOTE: skipping PCIE test becuase EPICS is broken.  Need to modify this script to enable again") 
 
-
-
-        # enabele register polling
+        # enable register polling
         print("enabling register polling")
         epics.caput(global_enable_pv, True)  # we normally leave this off to reduce dropped frames
 
@@ -223,7 +240,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         if XX:  # disabled while epics is broken. 
             a = epics.caget(rate_def_pv)
         else:
-            print("NOTE: skipping PCIE test becuase EPICS is broken.  Need to modify this script to enable again") 
+            print("NOTE: skipping PCIE test because EPICS is broken.  Need to modify this script to enable again") 
             a = [32,40,48,60,80,96,120,240,480]
         b = epics.caget(rate_select_pv) # which rate are we using
         print("b = ", b)
@@ -263,7 +280,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         mn = min(b)
 
         if((mx == 0) and (mn ==0)):
-            print("Note: MCE synword is not incremleenting - may be disabled by GCP")
+            print("Note: MCE syncword is not incrementing - may be disabled by GCP")
         else:
             print("OK: Sync word incrementing")
     except:
@@ -326,34 +343,35 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         except:
             print('Note: no pidfile, this is not an error')
 
-            # reboot the smurf card
-        print("rebooting smurf card")
-        os.system("fru_deactivate 10.0.1.30/2")
-        print("wait 10 seconds")
-        time.sleep(5)
-        print("reactiviting card")
-        os.system("fru_activate 10.0.1.30/2")
-        print("wait 1 minute for firmware load")
-        time.sleep(45)
-        print("done wating, ready to retry")
+        # reboot the smurf card
+        print("rebooting smurf card, wait %d seconds"%(wait_after_deactivate+wait_after_activate))
+        os.system("fru_deactivate %s/%d"%(crate_ip,smurf_slot_id))
+        print("wait %d seconds"%(wait_after_deactivate))
+        time.sleep(wait_after_deactivate)
+        print("reactivating card")
+        os.system("fru_activate %s/%d"%(crate_ip,smurf_slot_id))
+        print("wait %d seconds for firmware load"%(wait_after_activate))
+        time.sleep(wait_after_activate)
+        print("done waiting, ready to retry")
+
     if (smurf_problem==False):
         if (rf_test_on==False):
            print("OK, system OK, no RF testing done, exiting")
            exit()
-        print("Starting RF test")           
-        [freq, diff, ratio] = rf_test.rf_test(rf_fmin, rf_fmax, rf_runs) #run rf testing
-        rmin = min(ratio)
-        if rmin > rf_min_ratio:
-            print("OK: RF OK (basic functinoal test only)")
-            print("INSTRUCTION: check flux ramp monitor on scope, should be 4KHz, 50% amlitude")
-            print("If a spectrum analyzer is attached, a tone comb shoudl be on")
-            tmp = input("INPUT: enter 1 if flux ramp and tone comb OK to exit test, 0 to retry")
-            if tmp:
-                print("OK: system checked out")
-                exit()
-            else:
-                print("ERROR: Flux ramp bad, continue restarting") 
-                smurf_problem = True
+        #print("Starting RF test")           
+        #[freq, diff, ratio] = rf_test.rf_test(rf_fmin, rf_fmax, rf_runs) #run rf testing
+        #rmin = min(ratio)
+        #if rmin > rf_min_ratio:
+        #    print("OK: RF OK (basic functinoal test only)")
+        #    print("INSTRUCTION: check flux ramp monitor on scope, should be 4KHz, 50% amlitude")
+        #    print("If a spectrum analyzer is attached, a tone comb shoudl be on")
+        #    tmp = input("INPUT: enter 1 if flux ramp and tone comb OK to exit test, 0 to retry")
+        #    if tmp:
+        #        print("OK: system checked out")
+        #        exit()
+        #    else:
+        #        print("ERROR: Flux ramp bad, continue restarting") 
+        #        smurf_problem = True
         else:
             print("RF not operaging properly, line ratio too small, trying retest")
             smurf_problem = True
