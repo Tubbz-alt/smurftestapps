@@ -13,9 +13,11 @@ import cryostat_card
 docstring = """TEST"""
 
 ## parameters
+start_with_power_cycle=True
 
 # Crate
 crate_ip='10.0.1.4'
+crate_id=3
 smurf_slot_id=5
 wait_after_deactivate=5 #sec
 wait_after_activate=60 #sec
@@ -108,62 +110,83 @@ def cmdrun(a = 'ls'):
         cmdout = f.read()
     return(cmdout)
 
+# ANSI color escape sequences
+class Color:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+class Status:
+    OK = '[' + Color.OKGREEN + str.center('OK',4) + Color.ENDC + ']'
+    FAIL = '[' + Color.FAIL + str.center('FAIL',4) + Color.ENDC + ']'
+    WARN = '[' + Color.WARNING + str.center('WARN',4) + Color.ENDC + ']'
+
+def print_success(msg,status=Status.OK):
+    rows, columns = os.popen('stty size', 'r').read().split()
+    print(msg+' '*(int(columns)-len(msg)-len(status))+status)
+
 os.system("sudo service sioc-smrf-ml00 restart")
 
-print("Note: Power cycle smurf card to put in known state, wait %d seconds"%(wait_after_deactivate+wait_after_activate))
-os.system("fru_deactivate %s/%d"%(crate_ip,smurf_slot_id))
-print("wait %d seconds"%(wait_after_deactivate))
-time.sleep(wait_after_deactivate)
-print("reactivating card")
-os.system("fru_activate %s/%d"%(crate_ip,smurf_slot_id))
-print("wait %d seconds for firmware load"%(wait_after_activate))
-time.sleep(wait_after_activate)
-print("done power cycling smurf, ready to HAMMER")
+if start_with_power_cycle:
+    print("Note: Power cycle smurf card to put in known state, wait %d seconds"%(wait_after_deactivate+wait_after_activate))
+    os.system("fru_deactivate %s/%d"%(crate_ip,smurf_slot_id))
+    print("wait %d seconds"%(wait_after_deactivate))
+    time.sleep(wait_after_deactivate)
+    print("reactivating card")
+    os.system("fru_activate %s/%d"%(crate_ip,smurf_slot_id))
+    print("wait %d seconds for firmware load"%(wait_after_activate))
+    time.sleep(wait_after_activate)
+    print("done power cycling smurf")
 
 for trial in range(0,4):  # make 4 attempts to get smurf working
     print("Note: trial number = ", trial)
-
 
     smurf_problem = False 
     # check on pcie card
     a = cmdrun("/sbin/lspci")
     b = a.find("SLAC")
     if (b < 0):
-        print("ERROR: PCIE card not running, Restart computer as shown below")
+        print_success("ERROR: PCIE card not running, Restart computer as shown below",Status.FAIL)
         print("INSTRUCTION: become root then shutdown now -r")
         exit()
-    print("OK: PCIE card running")
+    print_success("PCIE card running")
 
     #is timing running
     a = cmdrun("screen -list")
     b = a.find("ts01")
     if (b < 0):
-        print("ERROR: ts01 timign service not running, restarting")
+        print_success("ERROR: ts01 timing service not running, restarting",Status.FAIL)
         os.system("sudo service sioc-smrf-ts01 restart")
         continue
     else:
-        print("OK: ts01 timing service is running")
+        print_success("ts01 timing service is running")
+
     b = a.find("ml00")
     if (b < 0):
-        print("ml00 epics service not running")
+        print_success("ml00 epics service not running",Status.FAIL)
         os.system("sudo service sioc-smrf-ml00 restart")
         continue
     else:
-        print("OK: ml00 service is running")
+        print_success("ml00 service is running")
 
     # is pcie gui running?
     for j in range(0,3):
         ps_return = cmdrun("ps aux")
         b = ps_return.find("Pcie_checker.py")
         if(b < 0):
-            print("Note: PCIE checker not running, will start")
+            print_success("Note: PCIE checker not running, will start",Status.FAIL)
             cmdrun(testapps_dir+"run_pcie_checker.sh")
             time.sleep(5) 
         else:
-            print("OK: pcie checker already running"); 
+            print_success("pcie checker already running"); 
             break
     if j >= 2:
-        print("ERROR - FATAL unable to start pcie checker - giving up")
+        print_success("ERROR - FATAL unable to start pcie checker - giving up",Status.FAIL)
         exit()
 
     # If 
@@ -173,7 +196,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             for line in f:
                 x= line
                 if len(x) == 0:
-                    print("Warning: couldn't find IP address in config file")
+                    print_success("Warning: couldn't find IP address in config file",Status.WARN)
                     break
                 b = x.find("receiver_ip")
                 if (b >= 0):
@@ -184,32 +207,33 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
                     a = cmdrun("ping -c1 " + ip)
                     r = a.find("rtt") #only get this when ping returns
                     if (r < 0):
-                        print("ERROR: could not ping MCE computer, check connection")
+                        print_success("ERROR: could not ping MCE computer, check connection",Status.FAIL)
                         print("fix networking, then restart this program")
                         exit()
                     else:
-                        print("OK, able to ping MCE computer")
+                        print_success("able to ping MCE computer")
                     break
 
     try:
         #Run Smurf,  new copy will stop on old
         print("starting smurf in %sgui mode, - may kill running copy, wait 90 seconds to start"%(['' if pyrogue_gui else 'no'][0]))
-        os.system(testapps_dir+"run_smurf.sh -t %s %s"%(transmit_dir,['' if pyrogue_gui else '--nogui'][0]))
+        os.system(testapps_dir+"run_smurf.sh -t %s -m %s -c %d -s %d %s"%(transmit_dir,crate_ip,crate_id,smurf_slot_id,['' if pyrogue_gui else '--nogui'][0]))
         time.sleep(45)
+
         for j in range(0,3):
             ps_return = cmdrun("ps aux")
             b = ps_return.find("pyrogue_server.py")
             if (b < 0):
-                print("Warning: SMURF still not running - starting")
+                print_success("Warning: SMURF still not running - starting",Status.WARN)
                 os.system(testapps_dir+"run_smurf.sh")
                 print("waiting 45 seconds for smurf to start")
                 time.sleep(45)
                 print("done waiting of smurf to start")
             else:
-                print("OK: SMURF is running")
+                print_success("SMURF is running")
                 break  
         if j >= 2:
-            print("unable to start smurf")
+            print_success("unable to start smurf",Status.FAIL)
             smurf_problem = True
 
         XX = 0
@@ -220,10 +244,10 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             c2 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
             d = c2-c1
             if (d <= 0):
-                print("ERROR:  RSSI link is not updating delta = ",d);
+                print_success("ERROR:  RSSI link is not updating delta = "+str(d),Status.FAIL);
                 smurf_problem = True
             else:
-                print("OK: RSSI link updating, delta =", d)
+                print_success("RSSI link updating, delta = " + str(d))
         else:
             print("NOTE: skipping PCIE test becuase EPICS is broken.  Need to modify this script to enable again") 
 
@@ -259,7 +283,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             print ("OK: Flux ramp and frame rate", rate, "Hz")
         b = epics.caget(timing_dest_select_pv)
         if (b != 0x20000):
-            print("Note: mysterious timign destionation pv != 0x20000, got " , hex(b), " will fix")
+            print("Note: mysterious timing destination pv != 0x20000, got " , hex(b), " will fix")
             epics.caput(timing_dest_select_pv, 0x20000) 
         #check incrementing timing counters
         a1 = 0
@@ -296,28 +320,28 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         try:
             x = epics.caget(mispv[n])
             if (x == None):
-                print("Could not read ", mispv[j])
+                print_success("Could not read "+str(mispv[j]),Status.FAIL)
                 smurf_problem = True
                 break  # end this loop, 
         except:
             smurf_problem = True
-            print("Error: ", mispv[n], " returned error")
+            print_success("Error: " + str(mispv[n]) + " returned error",Status.FAIL)
             break  # break out of loop
-        print("OK, checkign ", mispv[n], " = ", x)
+        print_success("OK, checking " + str(mispv[n]) + " = " + str(x))
     if (smurf_problem == False):
         #try cryostat card
         try:
             C = cryostat_card.cryostat_card(cryostat_card_readpv, cryostat_card_writepv)
             t = C.read_temperature()
             if ( (t > 5) and (t < 40)):
-                print("OK:  cryostat card temperature = ", t)
+                print_success("OK:  cryostat card temperature = "+str(t))
             else:
-                print("ERROR: cryostat card commmunication error, temperature = ", t)
+                print_success("ERROR: cryostat card commmunication error, temperature = " + str(t), Status.FAIL)
                 input("Fix cryostat card cables, enter 0 to continue, inlucing recheck of cryostat card");
                 smurf_problem = True
                 continue
         except: 
-            print("ERROR: can't connect to cryostat card PVs")
+            print_success("ERROR: can't connect to cryostat card PVs",Status.FAIL)
             smurf_problem = True
 #miscelaneous setup stuff (check if in pysmurf)
             
@@ -328,13 +352,13 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
                     pv = dac_base_pv + "DAC["+ str(d) + ']:DacReg['+str(dac_nums[n])+']'
                     tmp = epics.caget(pv)
                     if tmp == dac_vals[n]:
-                        print("OK: pv", pv, " = ", tmp, "OK")
+                        print_success("OK: pv" + str(pv) + " = " + str(tmp) + "OK")
                     else:
-                        print("ERROR, dac pv ", pv, "= ", tmp, "should be", dac_vals[n],"will reset card") 
+                        print_success("ERROR, dac pv " + str(pv) + "= " + str(tmp) + "should be" + str(dac_vals[n]) + "will reset card",Status.FAIL) 
                         smurf_problem = True
 
     if smurf_problem:  # OK go through full restart procedure
-        print("ERROR: system failed a test above, will reboot / retry")
+        print_success("ERROR: system failed a test above, will reboot / retry",Status.FAIL)
         #kill smurf
         print("pidfile = ", pidfile)
         try:
@@ -344,7 +368,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             os.system("kill "+a) # killing process
             time.sleep(1) # wait for it to die
         except:
-            print('Note: no pidfile, this is not an error')
+            print_success('Note: no pidfile, this is not an error',Status.WARN)
 
         # reboot the smurf card
         print("rebooting smurf card, wait %d seconds"%(wait_after_deactivate+wait_after_activate))
@@ -376,9 +400,9 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         #        print("ERROR: Flux ramp bad, continue restarting") 
         #        smurf_problem = True
         else:
-            print("RF not operaging properly, line ratio too small, trying retest")
+            print_success("RF not operaging properly, line ratio too small, trying retest",Status.FAIL)
             smurf_problem = True
-print("ERROR: problem not resolved")
+print_success("ERROR: problem not resolved",Status.FAIL)
 print("Reboot smurf server (smurf-server) and try again, soometimes this fixes things")
         
         
