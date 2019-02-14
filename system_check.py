@@ -58,6 +58,7 @@ rate_def_pv = "TPG:SMRF:1:FIXEDDIV"
 timing_dest_select_pv = epics_base+"AMCc:FpgaTopLevel:AmcCarrierCore:AmcCarrierTiming:EvrV2CoreTriggers:EvrV2ChannelReg[0]:DestSel"
 
 # AMC
+load_defaults = True # whether or not to load defaults.yml
 set_defaults_pv = epics_base+"AMCc:setDefaults"
 global_enable_pv = epics_base+"AMCc:enable"
 
@@ -230,11 +231,13 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         print("enabling register polling")
         epics.caput(global_enable_pv, True)  # we normally leave this off to reduce dropped frames
 
-        print("ready to set defaults")
-        epics.caput(set_defaults_pv, 1)
-        print("set defaults done")
-        time.sleep(5)
-        print("sleep done");
+        if load_defaults:
+            print("ready to set defaults")
+            epics.caput(set_defaults_pv, 1)
+            print("set defaults done")
+            time.sleep(5)
+            print("sleep done");
+        
         #check timing setup
         XX = 0
         if XX:  # disabled while epics is broken. 
