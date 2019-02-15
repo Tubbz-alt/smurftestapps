@@ -34,6 +34,7 @@ epics_base = 'test_epics:'
 # Paths
 testapps_dir = '/usr/local/controls/Applications/smurf/smurftestapps/'
 tmpfile = "/tmp/checkertmp"
+config_file= "/usr/local/controls/Applications/smurf/smurf2mce/current/mcetransmit/smurf2mce.cfg"
 pidfile = "/tmp/smurfpid"
 
 # Files
