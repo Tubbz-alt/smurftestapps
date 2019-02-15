@@ -293,10 +293,10 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         time.sleep(0.1)
         a2 = epics.caget(timestamp0_pv)
         if ((a1-a2) == 0):
-            print("Error: timing system fast counter not incrementing. Check timing fiber, but also possibly a SMURF problem")
+            print_success("Error: timing system fast counter not incrementing. Check timing fiber, but also possibly a SMURF problem",Status.FAIL)
             smurf_problem = True
         else:
-            print("OK: Timing system counter incrementing")
+            print_success("OK: Timing system counter incrementing")
 
         a1 = [0]
         a2 = [0]
