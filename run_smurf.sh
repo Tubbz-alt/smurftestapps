@@ -49,4 +49,5 @@ fi
 
 cd $TRANSMITDIR
 #nohup ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI > /dev/null &
+echo ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI 
 ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI 
