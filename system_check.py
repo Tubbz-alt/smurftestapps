@@ -218,7 +218,9 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
     try:
         #Run Smurf,  new copy will stop on old
         print("starting smurf in %sgui mode, - may kill running copy, wait 90 seconds to start"%(['' if pyrogue_gui else 'no'][0]))
-        os.system(testapps_dir+"run_smurf.sh -t %s -m %s -c %d -s %d %s"%(transmit_dir,crate_ip,crate_id,smurf_slot_id,['' if pyrogue_gui else '--nogui'][0]))
+        run_smurf_cmd=testapps_dir+"run_smurf.sh -t %s -m %s -c %d -s %d %s"%(transmit_dir,crate_ip,crate_id,smurf_slot_id,['' if pyrogue_gui else '--nogui'][0])
+        print('run_smurf_cmd=%s'%(run_smurf_cmd))
+        os.system(run_smurf_cmd)
         time.sleep(45)
 
         for j in range(0,3):
