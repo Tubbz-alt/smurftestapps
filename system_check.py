@@ -8,17 +8,54 @@ import epics
 import time
 import pysmurf
 import cryostat_card
+from optparse import OptionParser
+...
+parser = OptionParser()
+parser.add_option("-s","--smurf-slot", dest="smurf_slot_id",
+                  help="Which smurf slot to configure.  Required input.",
+                  type="int", metavar="[1-6]")
+
+parser.add_option("-y","--defaults", dest="defaults_yml",
+                  help="Path to defaults.yml file.  If not provided, will default to whatever's hard-coded in the transmitter.",
+                  type="str", metavar="PATH")
+
+parser.add_option("-e","--epics-root", dest="epics_root",
+                  default='test_epics',
+                  help="EPICS root name to instantiate pyrogue server with (e.g. test_epics).  If not provided, will default to whatever's hard-coded in the transmitter.",
+                  type="str", metavar="NAME")
+
+parser.add_option("-t","--pyrogue", dest="pyrogue_tarball",
+                  help="Path to pyrogue tarball.  If not provided, will default to whatever's hard-coded in the transmitter.",
+                  type="str", metavar="PATH")
+
+#parser.add_option("-q", "--quiet",
+#                  action="store_false", dest="verbose", default=True,
+#                  help="don't print status messages to stdout")
+
+(options, args) = parser.parse_args()
+
+if not options.smurf_slot_id:   # if filename is not given
+    parser.error('smurf_slot_id not given')
+
+# optional command line arguments for transmitter
+optional_transmitter_opts=' -r %s'%(options.epics_root)
+if options.defaults_yml:
+    optional_transmitter_opts+=' -y %s'%(options.defaults_yml)
+if options.pyrogue_tarball:
+    optional_transmitter_opts+=' -p %s'%(options.pyrogue_tarball)
+
 #import rf_test
 
 docstring = """TEST"""
 
 ## parameters
 start_with_power_cycle=True
+rtmeth_interface=False
 
 # Crate
 crate_ip='10.0.1.4'
 crate_id=3
-smurf_slot_id=5
+smurf_slot_id=options.smurf_slot_id
 wait_after_deactivate=5 #sec
 wait_after_activate=60 #sec
 
@@ -29,7 +66,7 @@ rf_runs = 7 # number of test runs between frequencies
 rf_min_ratio = 20  # minimum OK ration between desired line and other lines 
 
 # EPICs
-epics_base = 'test_epics:'
+epics_base = options.epics_root.rstrip()+':'
 
 # Paths
 testapps_dir = '/usr/local/controls/Applications/smurf/smurftestapps/'
@@ -82,18 +119,18 @@ else:
 
 # pvs used in setup
 mispv = []
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:iqSwapIn")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:iqSwapOut" )
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:refPhaseDelay")    
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:refPhaseDelayFine")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:toneScale") 
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:analysisScale")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:feedbackEnable")  
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:feedbackGain")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:lmsGain")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:digitizerFrequencyMHz")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:bandCenterMHz")
-mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[1]:numberSubBands")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:iqSwapIn")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:iqSwapOut" )
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:refPhaseDelay")    
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:refPhaseDelayFine")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:toneScale") 
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:analysisScale")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:feedbackEnable")  
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:feedbackGain")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:lmsGain")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:digitizerFrequencyMHz")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:bandCenterMHz")
+mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:SysgenCryo:Base[2]:numberSubBands")
 mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:DaqMuxV2[0]:Bsa[1]")
 mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:AppCore:MicrowaveMuxCore[0]:LMK:LmkReg_0x011E")
 mispv.append(epics_base+"AMCc:FpgaTopLevel:AppTop:DaqMuxV2[0]:TriggerDaq")
@@ -218,7 +255,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
     try:
         #Run Smurf,  new copy will stop on old
         print("starting smurf in %sgui mode, - may kill running copy, wait 90 seconds to start"%(['' if pyrogue_gui else 'no'][0]))
-        run_smurf_cmd=testapps_dir+"run_smurf.sh -t %s -m %s -c %d -s %d %s"%(transmit_dir,crate_ip,crate_id,smurf_slot_id,['' if pyrogue_gui else '--nogui'][0])
+        run_smurf_cmd=testapps_dir+"run_smurf.sh -t %s -m %s -c %d -s %d %s %s%s"%(transmit_dir,crate_ip,crate_id,smurf_slot_id,['' if pyrogue_gui else '--nogui'][0],['-e' if rtmeth_interface else ''][0],optional_transmitter_opts)
         print('run_smurf_cmd=%s'%(run_smurf_cmd))
         os.system(run_smurf_cmd)
         time.sleep(45)
@@ -262,9 +299,9 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             print("ready to set defaults")
             epics.caput(set_defaults_pv, 1)
             print("set defaults done")
-            time.sleep(5)
+            time.sleep(15)
             print("sleep done");
-        
+
         #check timing setup
         XX = 0
         if XX:  # disabled while epics is broken. 
@@ -288,6 +325,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
         if (b != 0x20000):
             print("Note: mysterious timing destination pv != 0x20000, got " , hex(b), " will fix")
             epics.caput(timing_dest_select_pv, 0x20000) 
+
         #check incrementing timing counters
         a1 = 0
         a2= 0  #kludge if pv is down. 
