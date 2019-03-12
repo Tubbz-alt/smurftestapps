@@ -20,8 +20,24 @@ while (( "$#" )); do
       SMURFSLOT="-s $2"
       shift 2
       ;;
+    -r|--epics-root)
+      EPICS_ROOT="-r $2"
+      shift 2
+      ;;
+    -p|--pyrogue)
+      PYROGUE="-t $2"
+      shift 2
+      ;;
+    -y|--defaults)
+      DEFAULTS_YML="-y $2"
+      shift 2
+      ;;
     --nogui)
       NOGUI="--nogui"
+      shift 1
+      ;;
+    -e)
+      INTERFACE="-e"
       shift 1
       ;;
     --) # end argument parsing
@@ -49,5 +65,5 @@ fi
 
 cd $TRANSMITDIR
 #nohup ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI > /dev/null &
-echo ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI 
-./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI 
+echo ./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI $INTERFACE $PYROGUE $DEFAULTS_YML $EPICS_ROOT
+./smurf_run.sh $SHELFMANAGER $CRATEID $SMURFSLOT $NOGUI $INTERFACE $PYROGUE $DEFAULTS_YML $EPICS_ROOT
