@@ -276,7 +276,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             print_success("unable to start smurf",Status.FAIL)
             smurf_problem = True
 
-        XX = 0
+        XX = 1
         if XX:     # This section disabled until epics is fixed.
         # check valid counts increment
             c1 = epics.caget(pcie_pv_base + str(pcie_pv_offset + rssi_chan))
@@ -303,7 +303,7 @@ for trial in range(0,4):  # make 4 attempts to get smurf working
             print("sleep done");
 
         #check timing setup
-        XX = 0
+        XX = 1
         if XX:  # disabled while epics is broken. 
             a = epics.caget(rate_def_pv)
         else:
