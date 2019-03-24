@@ -102,9 +102,9 @@ def test():
     bias_50K_s = str(bias_50K)[0:6]
     temperature_s = str(temperature)[0:6]
 
-    print('set= ', hex(relay_set), 'rb= ', hex(relay), 'h_bias=', hemt_bias_s, '50K bias = ', bias_50K_s, 'degC =', temperature_s,'ec=', error_count,'rtry=', c.retry, c.busy_retry )
-
     if (relay_set != relay):
       error_count = error_count + 1;
+
+    print('set= ', hex(relay_set), 'rb= ', hex(relay), 'h_bias=', hemt_bias_s, '50K bias = ', bias_50K_s, 'degC =', temperature_s,'ec=', error_count,'rtry=', c.retry, c.busy_retry )
 
 
