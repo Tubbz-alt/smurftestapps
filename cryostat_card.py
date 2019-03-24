@@ -13,6 +13,7 @@ class cryostat_card():
     self.a50K_bias_address = 0x4
     self.temperature_address = 0x5
     self.cycle_count_address = 0x6  # used for testing
+    self.ps_en_address = 07 # PS enable (HEMT: bit 0, 50k: bit 1)
     self.adc_scale = 3.3/(1024.0 * 5);
     self.temperature_scale = 1/.028; # was 100
     self.temperature_offset =.25;
@@ -61,6 +62,12 @@ class cryostat_card():
     data = self.do_read(self.count_address)
     return( cmd_data(data))  # do we have the right addres
 
+  def write_ps_en(self, enables):
+    epics.caput(self.writepv, cmd_make(0, self.ps_en_address, enables))
+
+  def read_ps_en(self):
+    data = self.do_read(self.ps_en_address)
+    return(cmd_data(data))
 
 # low level data conversion
 
