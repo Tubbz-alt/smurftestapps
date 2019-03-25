@@ -13,7 +13,8 @@ class cryostat_card():
     self.a50K_bias_address = 0x4
     self.temperature_address = 0x5
     self.cycle_count_address = 0x6  # used for testing
-    self.ps_en_address = 07 # PS enable (HEMT: bit 0, 50k: bit 1)
+    self.ps_en_address = 0x7 # PS enable (HEMT: bit 0, 50k: bit 1)
+    self.ac_dc_status_address = 0x8 # AC/DC mode status (bit 0: FRN_RLY, bit 1: FRP_RLY)
     self.adc_scale = 3.3/(1024.0 * 5);
     self.temperature_scale = 1/.028; # was 100
     self.temperature_offset =.25;
@@ -67,6 +68,10 @@ class cryostat_card():
 
   def read_ps_en(self):
     data = self.do_read(self.ps_en_address)
+    return(cmd_data(data))
+
+  def read_ac_dc_status(self):
+    data = self.do_read(self.ac_dc_status_address)
     return(cmd_data(data))
 
 # low level data conversion
