@@ -1,4 +1,13 @@
 #make_config_file.py
+##############################################################################
+## This file is part of 'smurftestapps'.
+## It is subject to the license terms in the LICENSE.txt file found in the 
+## top-level directory of this distribution and at: 
+##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
+## No part of 'smurftestapps', including this file, 
+## may be copied, modified, propagated, or distributed except according to 
+## the terms contained in the LICENSE.txt file.
+##############################################################################
 
 #Edit this python script to generate smurf2mce.cfg config files
 #copy file tot .../mcetransmit/smurf2mce.cfg

@@ -1,4 +1,13 @@
 #puts correct PVs into smurf buffer
+##############################################################################
+## This file is part of 'smurftestapps'.
+## It is subject to the license terms in the LICENSE.txt file found in the 
+## top-level directory of this distribution and at: 
+##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
+## No part of 'smurftestapps', including this file, 
+## may be copied, modified, propagated, or distributed except according to 
+## the terms contained in the LICENSE.txt file.
+##############################################################################
 import epics
 
 TES_base_pv = ':AMCc:FpgaTopLevel:AppTop:AppCore:RtmCryoDet:RtmSpiMax:TesBiasDacDataRegCh'
