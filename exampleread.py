@@ -1,4 +1,3 @@
-# example file read for data
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,9 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
+# example file read for data
+
 import numpy
 import matplotlib.pyplot as plt
 import sys

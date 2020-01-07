@@ -1,4 +1,3 @@
-#channel_test
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,8 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
+#channel_test
 #used to set valuse to channels
 
 import epics

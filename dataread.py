@@ -1,4 +1,3 @@
-
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,7 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
 def bytes_to_32bit(array, start):
     return  array[start] + array[start+1] * 0x100 + array[start+2] * 0x10000 + array[start+3] * 0x1000000
 

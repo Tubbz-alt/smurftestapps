@@ -1,4 +1,3 @@
-#make_config_file.py
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,8 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
+#make_config_file.py
 
 #Edit this python script to generate smurf2mce.cfg config files
 #copy file tot .../mcetransmit/smurf2mce.cfg

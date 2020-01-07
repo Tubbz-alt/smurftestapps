@@ -1,4 +1,3 @@
-#MCEsetparams.py
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,8 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
+#MCEsetparams.py
 # used to write the pv to set up num rows etc in smurf2mce
 import epics
 

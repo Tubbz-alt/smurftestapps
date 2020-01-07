@@ -1,4 +1,3 @@
-# takes 16 X 24 bit TES data, converts to packed 12x32 bit.
 ##############################################################################
 ## This file is part of 'smurftestapps'.
 ## It is subject to the license terms in the LICENSE.txt file found in the 
@@ -8,6 +7,8 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
+
+# takes 16 X 24 bit TES data, converts to packed 12x32 bit.
 import epics
 
 tesp = [0]*16
