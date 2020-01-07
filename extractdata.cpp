@@ -1,3 +1,13 @@
+//////////////////////////////////////////////////////////////////////////////
+// This file is part of 'smurftestapps'.
+// It is subject to the license terms in the LICENSE.txt file found in the 
+// top-level directory of this distribution and at: 
+//    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
+// No part of 'smurftestapps', including this file, 
+// may be copied, modified, propagated, or distributed except according to 
+// the terms contained in the LICENSE.txt file.
+//////////////////////////////////////////////////////////////////////////////
+
 // extracts data from saved data files
 // inputs: input_filename, output_filename,  first channel, last channel, averages, diagnostics
 
